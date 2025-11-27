@@ -607,8 +607,11 @@
     }
 
     function getClickLevelCost() {
-        // Exponential cost for click levels
-        return Math.floor(100 * Math.pow(1.6, game.clickLevel));
+        // !!! BALANCING UPDATE !!!
+        // Kosten deutlich erhöht. Basis 500, Exponent 2.5
+        // Level 1 -> 500 * 2.5^1 = 1250
+        // Level 10 -> 500 * 2.5^10 = ~4,7 Mio
+        return Math.floor(500 * Math.pow(2.5, game.clickLevel));
     }
 
     function buyClickStats() {
