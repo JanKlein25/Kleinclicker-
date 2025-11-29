@@ -1,122 +1,451 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Slot Machine 3x5</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Professionelle Slot Machine 3×5 — Demo</title>
 <style>
-    body {
-        background: #222;
-        color: white;
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 50px;
-    }
+  :root{
+    --bg:#0f1720;
+    --panel:#0b1320;
+    --accent:#f8b500;
+    --card:#111827;
+    --muted:#9ca3af;
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family: Inter, system-ui, Arial, sans-serif;
+    background: linear-gradient(180deg,var(--bg),#071021);
+    color:#e6edf3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    box-sizing:border-box;
+  }
 
-    #slot {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
+  .container{
+    width:980px;
+    max-width:98vw;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
+    border-radius:14px;
+    padding:22px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+  }
 
-    .reel {
-        width: 120px;
-        height: 360px; /* 3 Symbole je 120px */
-        overflow: hidden;
-        border: 3px solid #555;
-        background: #111;
-        border-radius: 8px;
-        position: relative;
-    }
+  /* Linke Seite: Slot */
+  .slot-area{
+    background:var(--panel);
+    padding:18px;
+    border-radius:10px;
+    box-shadow: inset 0 2px 8px rgba(255,255,255,0.02);
+  }
 
-    .symbol {
-        height: 120px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 48px;
-        background: #333;
-        border-bottom: 2px solid #222;
-    }
+  .title{
+    font-size:20px;
+    margin:0 0 12px 0;
+    color:var(--accent);
+    letter-spacing:0.6px;
+  }
 
-    #spinBtn {
-        padding: 15px 30px;
-        background: gold;
-        border: none;
-        border-radius: 6px;
-        font-size: 22px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
+  /* Viewport: 3 sichtbare Symbole pro Reel */
+  .viewport{
+    width: 740px; /* 5 reels * 140px */
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    padding:14px;
+    border-radius:10px;
+    display:flex;
+    gap:12px;
+    box-sizing:border-box;
+  }
 
-    #spinBtn:hover {
-        background: rgb(255, 230, 120);
-    }
+  .reel{
+    width:128px;
+    height:384px; /* 3 * 128 */
+    overflow:hidden;
+    border-radius:8px;
+    border:2px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg,#071022, #081226);
+    position:relative;
+  }
+
+  .strip{
+    position:absolute;
+    top:0; left:0; right:0;
+    will-change: transform;
+  }
+
+  .symbol{
+    height:128px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:48px;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  .symbol.box{
+    font-size:26px;
+    color:var(--muted);
+    background:linear-gradient(180deg,#0b1220,#0a1224);
+    border-bottom:1px solid rgba(255,255,255,0.02);
+  }
+
+  /* Controls on the right */
+  .controls{
+    width:200px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:12px;
+  }
+
+  button#spin{
+    padding:12px 16px;
+    font-size:18px;
+    background:var(--accent);
+    color:#081021;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow: 0 6px 18px rgba(248,181,0,0.18);
+  }
+  button#spin:disabled{opacity:0.55; cursor:not-allowed;}
+
+  .info{
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    border-radius:8px;
+    padding:10px;
+    font-size:14px;
+    color:var(--muted);
+  }
+
+  .result-grid{
+    margin-top:8px;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+  }
+  .cell{
+    height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:6px;
+    background:#071226;
+    font-size:18px;
+  }
+
+  footer.note{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  @media (max-width:900px){
+    .container{flex-direction:column; align-items:center;}
+    .viewport{width:100%; overflow:auto;}
+  }
 </style>
 </head>
 <body>
+  <div class="container" role="application" aria-label="Slot machine 3 by 5">
+    <div class="slot-area" style="flex:1">
+      <h2 class="title">3×5 Slotmaschine — Demo</h2>
 
-<h1>Slot Machine 3×5</h1>
+      <div class="viewport" id="viewport" aria-hidden="false">
+        <!-- 5 Reels werden per JS erzeugt -->
+      </div>
 
-<div id="slot">
-    <div class="reel"></div>
-    <div class="reel"></div>
-    <div class="reel"></div>
-    <div class="reel"></div>
-    <div class="reel"></div>
-</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+        <div style="color:var(--muted);font-size:14px;">
+          Einsatz: <strong id="bet">1</strong> • Credits: <strong id="credits">1000</strong>
+        </div>
+        <div style="color:var(--muted);font-size:13px;">© Demo — kein Echtgeld</div>
+      </div>
+    </div>
 
-<button id="spinBtn">SPIN!</button>
+    <aside class="controls" aria-label="Controls">
+      <button id="spin">SPIN</button>
+
+      <div class="info">
+        <div style="font-weight:600;margin-bottom:6px;">Letztes Ergebnis</div>
+        <div id="lastResult" style="font-size:13px;color:var(--muted)">Kein Spin bisher</div>
+
+        <div style="margin-top:8px;font-weight:600;margin-bottom:6px;">Matrix (3×5)</div>
+        <div class="result-grid" id="resultGrid">
+          <!-- 3x5 Ergebniszellen -->
+          <!-- Wir zeigen die 3 Reihen nebeneinander: jede Spalte ein Reel -->
+        </div>
+
+        <div class="note" style="margin-top:10px;">Gewinnregel (Demo): drei gleiche Symbole in der mittleren Reihe = Gewinn.</div>
+      </div>
+    </aside>
+  </div>
 
 <script>
-const symbols = ["🍒", "🍋", "⭐", "💎", "7️⃣", "🍀"];
+/*
+  Professionelle 3x5 Slotmachine (einzelne Datei)
+  - 5 Reels
+  - 3 sichtbare Symbole pro Reel
+  - Saubere Animation per CSS transform + transition
+  - Reels werden mit wiederholten Symbolen befüllt, Stop-Position wird auf Symbolhöhe ausgerichtet
+  - Ergebnisermittlung erzeugt 3x5 matrix
+*/
 
-const reels = [...document.querySelectorAll(".reel")];
+const SYMBOLS = ["🍒","🍋","⭐","💎","7️⃣","🍀","🔔","🍇"];
+const REEL_COUNT = 5;
+const VISIBLE_ROWS = 3;
+const SYMBOL_HEIGHT = 128; // px — muss mit CSS .symbol Höhe übereinstimmen
+const REEL_STRIP_LENGTH = 40; // Anzahl Symbole in der vertikalen Strip (groß genug für Spin)
+const viewport = document.getElementById('viewport');
+const spinBtn = document.getElementById('spin');
+const lastResult = document.getElementById('lastResult');
+const resultGrid = document.getElementById('resultGrid');
+const creditsEl = document.getElementById('credits');
+let credits = 1000;
+const betEl = document.getElementById('bet');
 
-function createReelSymbols(reel) {
-    reel.innerHTML = "";
+let reels = []; // Array mit {el:reelDiv, stripEl, currentOffsetIndex}
+let spinning = false;
 
-    for (let i = 0; i < 20; i++) {
-        const sym = document.createElement("div");
-        sym.className = "symbol";
-        sym.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-        reel.appendChild(sym);
+// Hilfsfunktion: zufälliges Symbol
+function randSymbol(){ return SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]; }
+
+// Baue die Reels (DOM)
+function createReels(){
+  viewport.innerHTML = '';
+  reels = [];
+  for(let r=0;r<REEL_COUNT;r++){
+    const reel = document.createElement('div');
+    reel.className = 'reel';
+    reel.setAttribute('aria-hidden','false');
+
+    const strip = document.createElement('div');
+    strip.className = 'strip';
+
+    // Befülle strip mit REEL_STRIP_LENGTH Symbolen
+    const symbols = [];
+    for(let i=0;i<REEL_STRIP_LENGTH;i++){
+      const s = document.createElement('div');
+      s.className = 'symbol box';
+      const sym = randSymbol();
+      s.textContent = sym;
+      symbols.push(sym);
+      strip.appendChild(s);
     }
-}
 
-reels.forEach(createReelSymbols);
+    // Um flüssiges Resetten zu ermöglichen, klonen wir die ersten VISIBLE_ROWS Symbole
+    // ans Ende (sorgt für sauberen Übergang wenn wir nach unten scrollen).
+    for(let k=0;k<VISIBLE_ROWS;k++){
+      const clone = strip.children[k].cloneNode(true);
+      strip.appendChild(clone);
+    }
 
-function spinReel(reel, delay) {
-    return new Promise(resolve => {
-        const randomStop = Math.floor(Math.random() * 17) * 120;
+    reel.appendChild(strip);
+    viewport.appendChild(reel);
 
-        setTimeout(() => {
-            reel.style.transition = "transform 1s cubic-bezier(.1,.9,.1,1)";
-            reel.style.transform = `translateY(-${randomStop}px)`;
+    // Start-Offset -> zufällig so dass 3 Symbole sichtbar sind
+    const startIndex = Math.floor(Math.random() * (REEL_STRIP_LENGTH - VISIBLE_ROWS));
+    const startY = -startIndex * SYMBOL_HEIGHT;
+    strip.style.transform = `translateY(${startY}px)`;
 
-            setTimeout(() => {
-                reel.style.transition = "";
-                resolve();
-            }, 1000);
-        }, delay);
+    reels.push({
+      el: reel,
+      strip,
+      index: startIndex // der Index des obersten sichtbaren Symbols
     });
+  }
 }
 
-document.getElementById("spinBtn").onclick = async () => {
-    reels.forEach(r => r.style.transform = "translateY(0)");
+// Hilfs: baue Ergebnis-Gitter UI (3x5)
+function renderResultGrid(matrix){
+  // matrix ist 3 x 5 (rows x cols)
+  resultGrid.innerHTML = '';
+  // wir wollen 3 Reihen x 5 Spalten anzeigen, aber layout ist 5 Spalten (für jede Spalte die drei Werte)
+  // um es simpel zu halten: zeigen wir für jede Reel die mittlere Reihe oben, dann unten die anderen...
+  // Statt kompliziertem Raster zeigen wir jede Spalte vertikal: Reihen von oben->unten
+  for(let c=0;c<REEL_COUNT;c++){
+    for(let r=0;r<VISIBLE_ROWS;r++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = matrix[r][c];
+      resultGrid.appendChild(cell);
+    }
+  }
+}
 
-    await Promise.all([
-        spinReel(reels[0], 0),
-        spinReel(reels[1], 150),
-        spinReel(reels[2], 300),
-        spinReel(reels[3], 450),
-        spinReel(reels[4], 600)
-    ]);
+// Errechne sichtbare 3x5 Matrix aus reel.index
+function getVisibleMatrix(){
+  // matrix[rows][cols]
+  const matrix = Array.from({length: VISIBLE_ROWS}, ()=>Array(REEL_COUNT).fill(''));
+  for(let c=0;c<REEL_COUNT;c++){
+    const reel = reels[c];
+    // oberster sichtbarer index ist reel.index
+    for(let r=0;r<VISIBLE_ROWS;r++){
+      let idx = reel.index + r;
+      // modulo length
+      idx = idx % (REEL_STRIP_LENGTH + VISIBLE_ROWS); // wir haben extra geklonte items
+      const node = reel.strip.children[idx];
+      matrix[r][c] = node ? node.textContent : '?';
+    }
+  }
+  return matrix;
+}
 
-    console.log("Spin fertig!");
-};
+// Prüfe einfache Gewinnregel (Demo): mittlere Reihe alle gleich
+function evaluateWin(matrix){
+  // mittlere Reihe ist row index 1 (0,1,2)
+  const mid = matrix[1];
+  const allSame = mid.every(v => v === mid[0]);
+  if(allSame){
+    return {won:true, symbol:mid[0], payout: 10}; // Beispiel: 10x Einsatz
+  }
+  return {won:false, payout:0};
+}
+
+// Spins ausführen
+async function spin(){
+  if(spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+
+  const bet = Number(betEl.textContent) || 1;
+  if(credits < bet){ alert('Nicht genügend Credits'); spinBtn.disabled=false; spinning=false; return; }
+  credits -= bet;
+  creditsEl.textContent = credits;
+
+  // Für jede Walze: berechne ein zufälliges Stop-Index (oberstes sichtbares Symbol)
+  // Damit die Animation "realistisch" wirkt, wir erhöhen zunächst den index um eine große Anzahl (volle Umdrehungen)
+  const targetIndexes = [];
+  for(let c=0;c<REEL_COUNT;c++){
+    // Zielindex innerhalb 0..REEL_STRIP_LENGTH-1
+    const target = Math.floor(Math.random() * (REEL_STRIP_LENGTH - VISIBLE_ROWS));
+    // add einige Runden (z.B. 3..6 Runden) um Bewegung zu zeigen
+    const rounds = 3 + Math.floor(Math.random()*4); // 3..6
+    const totalIndex = rounds * (REEL_STRIP_LENGTH) + target;
+    targetIndexes.push(totalIndex);
+  }
+
+  // Animation: wir benutzen CSS transitions per reel.strip
+  // Wir staffeln die Stops (erste Reel stoppt zuerst)
+  // Laufzeiten und delays können variiert
+  const baseDuration = 1200; // ms für die kürzeste Reel
+  const delays = [0, 150, 300, 450, 600]; // Stagger
+
+  // Set transitions and target transforms
+  const promises = reels.map((r, i) => {
+    return new Promise(resolve => {
+      // compute target translateY (negative)
+      const totalIndex = targetIndexes[i];
+      const finalIndex = totalIndex % (REEL_STRIP_LENGTH + VISIBLE_ROWS);
+      // Die Transformationsdistanz in px: negative
+      const distance = - totalIndex * SYMBOL_HEIGHT;
+
+      // Set transition
+      const duration = baseDuration + i*180 + Math.floor(Math.random()*200); // ms
+      // Temporarily remove transition to set from current position if needed
+      // Use setTimeout for delay (stagger)
+      setTimeout(()=>{
+        // apply transition
+        r.strip.style.transition = `transform ${duration}ms cubic-bezier(.18,.9,.24,1)`;
+        r.strip.style.transform = `translateY(${distance}px)`;
+
+        // after transition ends, we must normalize transform and update r.index
+        // listen for transitionend on strip
+        const onEnd = (ev) => {
+          // remove listener
+          r.strip.removeEventListener('transitionend', onEnd);
+
+          // remove transition to jump to normalized position
+          r.strip.style.transition = '';
+          // compute visible top index modulo
+          const normalizedIndex = finalIndex % (REEL_STRIP_LENGTH + VISIBLE_ROWS);
+          // set transform to the normalized position (so future spins start clean)
+          const normalizedY = -normalizedIndex * SYMBOL_HEIGHT;
+          r.strip.style.transform = `translateY(${normalizedY}px)`;
+          r.index = normalizedIndex;
+          resolve({reel:i, finalIndex:normalizedIndex});
+        };
+
+        // safety: if transitionend doesn't fire (old browsers), fallback timeout
+        let done = false;
+        const fallback = setTimeout(()=> {
+          if(done) return;
+          done = true;
+          r.strip.removeEventListener('transitionend', onEnd);
+          r.strip.style.transition = '';
+          const normalizedIndex = finalIndex % (REEL_STRIP_LENGTH + VISIBLE_ROWS);
+          const normalizedY = -normalizedIndex * SYMBOL_HEIGHT;
+          r.strip.style.transform = `translateY(${normalizedY}px)`;
+          r.index = normalizedIndex;
+          resolve({reel:i, finalIndex:normalizedIndex});
+        }, duration + 80);
+
+        r.strip.addEventListener('transitionend', function handler(e){
+          if(done) return;
+          done = true;
+          clearTimeout(fallback);
+          onEnd(e);
+        });
+
+      }, delays[i]);
+    });
+  });
+
+  // Warte bis alle fertig sind
+  const results = await Promise.all(promises);
+
+  // Spin vorbei -> auswerten
+  const matrix = getVisibleMatrix(); // 3x5
+  renderResultGrid(matrix);
+  const evalRes = evaluateWin(matrix);
+
+  if(evalRes.won){
+    const payout = evalRes.payout * bet;
+    credits += payout;
+    creditsEl.textContent = credits;
+    lastResult.textContent = `Gewonnen! ${evalRes.symbol} — Auszahlung: ${payout} Credits`;
+  } else {
+    lastResult.textContent = `Kein Gewinn — Versuche es nochmal.`;
+  }
+
+  spinning = false;
+  spinBtn.disabled = false;
+}
+
+// Init
+function init(){
+  createReels();
+
+  // Ergebnis-UI initial bauen (leer)
+  resultGrid.innerHTML = '';
+  for(let c=0;c<REEL_COUNT;c++){
+    for(let r=0;r<VISIBLE_ROWS;r++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = '-';
+      resultGrid.appendChild(cell);
+    }
+  }
+
+  spinBtn.addEventListener('click', ()=> {
+    spin().catch(err=>{
+      console.error(err);
+      spinning=false;
+      spinBtn.disabled=false;
+      alert('Fehler beim Spin: ' + (err && err.message ? err.message : err));
+    });
+  });
+}
+
+init();
 </script>
-
 </body>
 </html>
